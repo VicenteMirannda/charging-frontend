@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EV Charging Sessions</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header>
+    <h1>⚡ EV Charging Sessions</h1>
+</header>
+
+<main>
+    <p class="alert success" th:if="${successMessage}" th:text="${successMessage}"></p>
+    <p class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <section class="card">
+        <h2>Start a charging session</h2>
+        <!-- The options match the demo data of the charging-session-service (standalone mode) -->
+        <form th:action="@{/sessions}" th:object="${startSessionForm}" method="post" class="form-grid">
+            <label>Vehicle
+                <select th:field="*{vehicleId}">
+                    <option value="1">1 - Tesla Model 3 (60 kWh, max 170 kW)</option>
+                    <option value="2">2 - Renault Zoe (52 kWh, max 22 kW)</option>
+                </select>
+                <span class="field-error" th:errors="*{vehicleId}"></span>
+            </label>
+
+            <label>Charging point
+                <select th:field="*{chargingPointId}">
+                    <option value="1">1 - Castelo Branco, Centro (50 kW)</option>
+                    <option value="2">2 - Castelo Branco, IPCB (22 kW)</option>
+                    <option value="3">3 - Covilhã, A23 (150 kW, offline)</option>
+                </select>
+                <span class="field-error" th:errors="*{chargingPointId}"></span>
+            </label>
+
+            <label>Current battery (%)
+                <input type="number" th:field="*{startBatteryPercent}">
+                <span class="field-error" th:errors="*{startBatteryPercent}"></span>
+            </label>
+
+            <label>Charge up to (%)
+                <input type="number" th:field="*{targetBatteryPercent}">
+                <span class="field-error" th:errors="*{targetBatteryPercent}"></span>
+                <span class="field-error" th:errors="*{targetAboveStart}"></span>
+            </label>
+
+            <button type="submit">Start session</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Session history</h2>
+            <form th:action="@{/sessions}" method="get">
+                <select name="vehicleId" onchange="this.form.submit()">
+                    <option value="1" th:selected="${vehicleId == 1}">Vehicle 1 - Tesla Model 3</option>
+                    <option value="2" th:selected="${vehicleId == 2}">Vehicle 2 - Renault Zoe</option>
+                </select>
+            </form>
+        </div>
+
+        <p th:if="${sessions.isEmpty()}" class="empty">No sessions yet for this vehicle.</p>
+
+        <div class="table-wrapper" th:unless="${sessions.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Charging point</th>
+                    <th>Battery</th>
+                    <th>Power</th>
+                    <th>Energy</th>
+                    <th>Started</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="chargingSession : ${sessions}">
+                    <td th:text="${chargingSession.id}"></td>
+                    <td th:text="${chargingSession.chargingPointId}"></td>
+                    <td th:text="|${chargingSession.startBatteryPercent}% → ${chargingSession.targetBatteryPercent}%|"></td>
+                    <td th:text="|${chargingSession.chargingPowerKw} kW|"></td>
+                    <td th:text="|${chargingSession.energyDeliveredKwh} / ${chargingSession.energyNeededKwh} kWh|"></td>
+                    <td th:text="${#temporals.format(chargingSession.startTime, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${chargingSession.durationMinutes != null} ? |${chargingSession.durationMinutes} min| : '-'"></td>
+                    <td>
+                        <span th:class="${chargingSession.inProgress} ? 'badge in-progress' : 'badge completed'"
+                              th:text="${chargingSession.inProgress} ? 'In progress' : 'Completed'"></span>
+                    </td>
+                    <td>
+                        <form th:if="${chargingSession.inProgress}" th:action="@{/sessions/{id}/stop(id=${chargingSession.id})}" method="post">
+                            <input type="hidden" name="vehicleId" th:value="${vehicleId}">
+                            <button type="submit" class="secondary">Stop</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

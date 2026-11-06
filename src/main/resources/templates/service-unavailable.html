@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Service unavailable</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header>
+    <h1>⚡ EV Charging Sessions</h1>
+</header>
+<main>
+    <section class="card">
+        <h2>Service unavailable</h2>
+        <p>The charging session service could not be reached. Check that it is running and try again.</p>
+        <a th:href="@{/sessions}">Try again</a>
+    </section>
+</main>
+</body>
+</html>
